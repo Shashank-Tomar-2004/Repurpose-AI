@@ -1,101 +1,124 @@
 export const runtime = "nodejs";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   try {
-    const { content, tone } = await req.json();
+    const body = await req.json();
+    const { content, tone, depth, cta, hashtags } = body;
 
     if (!content) {
-      return Response.json({ error: "No content provided" }, { status: 400 });
+      return NextResponse.json({ error: "Missing content" }, { status: 400 });
     }
 
-    const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash",
-    });
+    const apiKey = process.env.GEMINI_API_KEY;
+
+    if (!apiKey) {
+      return NextResponse.json({ error: "API key missing" }, { status: 500 });
+    }
 
     const prompt = `
-You are a growth marketer.
+You are an AI content repurposing engine.
 
-Tone: ${tone || "Professional B2B"}
+Return ONLY valid JSON.
+Do NOT add explanations.
+Do NOT wrap in markdown.
+Do NOT include \`\`\`.
 
-Generate:
-
-1. Three LinkedIn posts (array of strings only).
-2. Three Twitter hooks (array of strings only).
-3. One SEO meta description under 160 characters.
-4. One YouTube title and description.
-
-Return STRICTLY valid JSON:
+Format strictly as:
 
 {
-  "linkedin": ["post1","post2","post3"],
-  "twitter_hooks": ["hook1","hook2","hook3"],
-  "meta_description": "string",
+  "linkedin": ["", "", ""],
+  "twitter_hooks": ["", "", ""],
+  "meta_description": "",
   "youtube": {
-    "title": "string",
-    "description": "string"
+    "title": "",
+    "description": ""
   }
 }
 
-Blog content:
-${content.slice(0, 8000)}
+Tone: ${tone}
+Depth: ${depth}
+CTA: ${cta}
+Include Hashtags: ${hashtags}
+
+Content:
+${content}
 `;
 
-    const result = await model.generateContent(prompt);
-    let text = result.response.text();
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [{ text: prompt }],
+            },
+          ],
+        }),
+      },
+    );
 
-    text = text.replace(/```json/g, "").replace(/```/g, "").trim();
+    const data = await response.json();
+
+    if (!response.ok) {
+      return NextResponse.json(
+        { error: data.error?.message || "Gemini API failed" },
+        { status: 500 },
+      );
+    }
+
+    const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+    if (!rawText) {
+      return NextResponse.json(
+        { error: "Empty Gemini response" },
+        { status: 500 },
+      );
+    }
+
+    // 🔥 SAFELY EXTRACT JSON
+    let jsonText = rawText.trim();
+
+    // Remove markdown ```json blocks if present
+    if (jsonText.startsWith("```")) {
+      jsonText = jsonText.replace(/```json/g, "");
+      jsonText = jsonText.replace(/```/g, "");
+    }
+
+    // Extract first { ... } block
+    const firstBrace = jsonText.indexOf("{");
+    const lastBrace = jsonText.lastIndexOf("}");
+
+    if (firstBrace === -1 || lastBrace === -1) {
+      return NextResponse.json(
+        { error: "Gemini did not return JSON structure" },
+        { status: 500 },
+      );
+    }
+
+    jsonText = jsonText.substring(firstBrace, lastBrace + 1);
 
     let parsed;
 
     try {
-      parsed = JSON.parse(text);
+      parsed = JSON.parse(jsonText);
     } catch {
-      console.error("Invalid JSON from AI:", text);
-      return Response.json(
-        { error: "AI returned invalid JSON" },
-        { status: 500 }
+      return NextResponse.json(
+        { error: "Failed to parse Gemini JSON" },
+        { status: 500 },
       );
     }
 
-    // Ensure correct structure
-    parsed.linkedin = Array.isArray(parsed.linkedin)
-      ? parsed.linkedin.map((x: any) =>
-          typeof x === "string" ? x : String(x)
-        )
-      : [];
-
-    parsed.twitter_hooks = Array.isArray(parsed.twitter_hooks)
-      ? parsed.twitter_hooks.map((x: any) =>
-          typeof x === "string" ? x : String(x)
-        )
-      : [];
-
-    parsed.meta_description =
-      typeof parsed.meta_description === "string"
-        ? parsed.meta_description
-        : "";
-
-    parsed.youtube = parsed.youtube || {};
-    parsed.youtube.title =
-      typeof parsed.youtube.title === "string"
-        ? parsed.youtube.title
-        : "";
-    parsed.youtube.description =
-      typeof parsed.youtube.description === "string"
-        ? parsed.youtube.description
-        : "";
-
-    return Response.json(parsed);
-
-  } catch (error) {
-    console.error("AI Route Error:", error);
-    return Response.json(
-      { error: "AI generation failed" },
-      { status: 500 }
+    return NextResponse.json(parsed);
+  } catch (err: any) {
+    return NextResponse.json(
+      { error: err.message || "Unexpected server error" },
+      { status: 500 },
     );
   }
 }
-
