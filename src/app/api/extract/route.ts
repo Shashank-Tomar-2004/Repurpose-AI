@@ -1,54 +1,46 @@
 export const runtime = "nodejs";
-import { JSDOM } from "jsdom";
-import { Readability } from "@mozilla/readability";
+
+import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   try {
     const { url } = await req.json();
 
     if (!url) {
-      return Response.json({ error: "No URL provided" }, { status: 400 });
-    }
-
-    try {
-      new URL(url);
-    } catch {
-      return Response.json({ error: "Invalid URL format" }, { status: 400 });
+      return NextResponse.json(
+        { error: "URL is required" },
+        { status: 400 }
+      );
     }
 
     const response = await fetch(url);
 
     if (!response.ok) {
-      return Response.json(
+      return NextResponse.json(
         { error: "Failed to fetch URL" },
-        { status: 400 }
+        { status: 500 }
       );
     }
 
     const html = await response.text();
 
-    const dom = new JSDOM(html, { url });
-    const reader = new Readability(dom.window.document);
-    const article = reader.parse();
+    // 🔥 Basic text extraction (remove scripts/styles/tags)
+    let text = html
+      .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, "")
+      .replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, "")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
 
-    if (!article || !article.textContent) {
-      return Response.json(
-        { error: "Could not extract article content" },
-        { status: 400 }
-      );
-    }
+    // Limit size so Gemini doesn’t explode
+    text = text.slice(0, 12000);
 
-    return Response.json({
-      title: article.title,
-      content: article.textContent,
-    });
+    return NextResponse.json({ content: text });
 
-  } catch (error) {
-    console.error("Extraction error:", error);
-    return Response.json(
-      { error: "Extraction failed" },
+  } catch (err: any) {
+    return NextResponse.json(
+      { error: err.message || "Extraction failed" },
       { status: 500 }
     );
   }
 }
-
