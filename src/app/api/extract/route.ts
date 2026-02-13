@@ -1,3 +1,4 @@
+export const runtime = "nodejs";
 import { JSDOM } from "jsdom";
 import { Readability } from "@mozilla/readability";
 
