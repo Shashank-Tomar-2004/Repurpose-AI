@@ -1,36 +1,205 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🚀 RepurposeAI
 
-## Getting Started
+### Intelligent Content Repurposing Engine
 
-First, run the development server:
+RepurposeAI is a production-ready AI tool that extracts blog content from any URL and instantly generates platform-optimized assets for:
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+* LinkedIn
+* X (Twitter)
+* SEO Meta Description
+* YouTube Title & Description
+
+Built using **Next.js 16 (App Router)** and **Google Gemini 2.5 Flash**, the app includes regeneration, editing, export, history tracking, and production deployment on Vercel.
+
+---
+
+## 🌐 Live Demo
+
+👉 [https://repurposeai.vercel.app](https://repurposeai.vercel.app)
+👉 GitHub Repository: [https://github.com/Shashank-Tomar-2004/repurpose-ai](https://github.com/Shashank-Tomar-2004/repurpose-ai)
+
+---
+
+# ✨ Features
+
+### 🔄 Content Extraction
+
+* Fetches blog content from any public URL
+* Cleans HTML and extracts readable text
+* Optimized for serverless deployment (no heavy DOM dependencies)
+
+### 🤖 AI Content Generation
+
+* Powered by Gemini 2.5 Flash
+* Platform-specific formatting
+* Adjustable:
+
+  * Tone
+  * Depth
+  * CTA style
+  * Hashtag toggle
+
+### ♻ Regeneration Engine
+
+* Re-generates variations without re-extracting content
+* Fast UX improvement
+
+### ✏ Editable Output
+
+* Fully editable content cards
+* Character counters
+* SEO truncation warnings
+* Real-time editing
+
+### 📋 Copy Feedback System
+
+* Copy button turns green
+* “Copied” state shown for 2 seconds
+* Clean UX feedback
+
+### 📦 Export Options
+
+* Copy All
+* Download as .txt
+* Per-section copy
+
+### 🗂 History System
+
+* Compact dropdown in navbar
+* Click to reload previous generation
+* Remove individual entries
+* Stored in localStorage
+
+### 🎨 UI/UX
+
+* Wide SaaS layout
+* Sticky controls
+* Animated dropdown
+* Clean spacing rhythm
+* Responsive design
+* Production-ready polish
+
+---
+
+# 🏗 Tech Stack
+
+* Next.js 16 (App Router)
+* TypeScript
+* TailwindCSS
+* Google Gemini 2.5 Flash API
+* Vercel (Production Hosting)
+* Lucide Icons
+
+---
+
+# 🧠 Architecture
+
+```
+src/
+ ├─ app/
+ │   ├─ page.tsx
+ │   ├─ api/
+ │   │   ├─ extract/route.ts
+ │   │   └─ generate/route.ts
+ ├─ components/
+ │   ├─ Navbar.tsx
+ │   ├─ LeftPanel.tsx
+ │   ├─ EditableCard.tsx
+ │   ├─ Tabs.tsx
+ │   └─ EmptyState.tsx
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+* `extract` → Fetch + clean blog content
+* `generate` → Calls Gemini API and safely parses structured JSON
+* Frontend handles:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+  * Editing
+  * History
+  * Regeneration
+  * Export
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+# ⚙ Environment Variables
 
-To learn more about Next.js, take a look at the following resources:
+Create a `.env.local` file:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```env
+GEMINI_API_KEY=your_api_key_here
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+On Vercel:
 
-## Deploy on Vercel
+Add `GEMINI_API_KEY` in:
+Project → Settings → Environment Variables
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# 🚀 Local Setup
+
+```bash
+git clone https://github.com/Shashank-Tomar-2004/repurpose-ai.git
+cd repurpose-ai
+npm install
+npm run dev
+```
+
+Production build:
+
+```bash
+npm run build
+```
+
+---
+
+# 🛠 Deployment
+
+Hosted on **Vercel**
+
+* Node runtime enabled for API routes
+* Serverless compatible extraction logic
+* Optimized for production
+
+---
+
+# 🧩 Improvements Implemented Beyond Basic Requirements
+
+* Safe JSON parsing from AI responses
+* Graceful error handling
+* Strict production-safe API routes
+* Dropdown history with removal
+* ESC + click-outside closing
+* Character limit warnings
+* UX state transitions
+* Reduced dependency footprint (removed jsdom for stability)
+
+---
+
+# 🎯 Why This Is Production-Ready
+
+* No runtime crashes
+* Works locally and in serverless production
+* Clean architecture separation
+* Optimized API handling
+* Strong UX feedback mechanisms
+* Stable AI JSON parsing
+
+---
+
+# 📌 Future Enhancements
+
+* Authentication layer
+* Database-backed history
+* Multi-user workspace
+* Custom domain & branding
+* Advanced content templates
+* Analytics integration
+
+---
+
+# 👤 Author
+
+Shashank Tomar
+AI-Driven Product Builder
+
+---
